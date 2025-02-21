@@ -2,11 +2,14 @@
 let SCROLL_STEP = 1; // pixels per step
 let SCROLL_INTERVAL = 50; // milliseconds between steps
 let PAUSE_DURATION = 5000; // milliseconds to pause when a post is in view
+const PIXELS_PER_BANANA = 178; // 1 banana ≈ 7 inches ≈ 178 pixels
 
 let isScrolling = false;
 let scrollInterval = null;
 let lastScrollPosition = 0;
 let pauseTimeout = null;
+let totalScrollDistance = 0;
+let bananaCount = 0;
 
 // Create control panel
 const controlPanel = document.createElement('div');
@@ -23,6 +26,31 @@ controlPanel.style.cssText = `
     font-family: Arial, sans-serif;
     min-width: 200px;
 `;
+
+// Create banana counter
+const bananaCounter = document.createElement('div');
+bananaCounter.style.cssText = `
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 14px;
+    padding: 8px;
+    background: #2d2d2e;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+`;
+
+const bananaEmoji = document.createElement('span');
+bananaEmoji.textContent = '🍌';
+bananaEmoji.style.fontSize = '20px';
+
+const bananaText = document.createElement('span');
+bananaText.textContent = '0 bananas scrolled';
+
+bananaCounter.appendChild(bananaEmoji);
+bananaCounter.appendChild(bananaText);
 
 // Create settings controls
 const createSettingControl = (label, value, min, max, step) => {
@@ -92,11 +120,51 @@ toggleButton.style.cssText = `
     margin-top: 10px;
 `;
 
+controlPanel.appendChild(bananaCounter);
 controlPanel.appendChild(scrollStepControl.container);
 controlPanel.appendChild(scrollIntervalControl.container);
 controlPanel.appendChild(pauseDurationControl.container);
 controlPanel.appendChild(toggleButton);
 document.body.appendChild(controlPanel);
+
+// Function to update banana counter
+function updateBananaCounter(scrollAmount) {
+    totalScrollDistance += scrollAmount;
+    const newBananaCount = Math.floor(totalScrollDistance / PIXELS_PER_BANANA);
+    
+    if (newBananaCount !== bananaCount) {
+        bananaCount = newBananaCount;
+        bananaText.textContent = `${bananaCount} banana${bananaCount !== 1 ? 's' : ''} scrolled`;
+        
+        // Add banana animation when count increases
+        const animatedBanana = document.createElement('div');
+        animatedBanana.textContent = '🍌';
+        animatedBanana.style.cssText = `
+            position: fixed;
+            right: 250px;
+            bottom: 40px;
+            font-size: 24px;
+            animation: flyBanana 1s ease-out;
+            pointer-events: none;
+        `;
+        
+        // Add animation keyframes
+        if (!document.querySelector('#bananaAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'bananaAnimation';
+            style.textContent = `
+                @keyframes flyBanana {
+                    0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+                    100% { transform: translateX(-100px) rotate(360deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(animatedBanana);
+        setTimeout(() => animatedBanana.remove(), 1000);
+    }
+}
 
 // Function to check if a post is in view
 function isPostInView() {
@@ -139,6 +207,7 @@ function autoScroll() {
     }
 
     window.scrollBy(0, SCROLL_STEP);
+    updateBananaCounter(SCROLL_STEP);
 }
 
 // Toggle auto-scrolling

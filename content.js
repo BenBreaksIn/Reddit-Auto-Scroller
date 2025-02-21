@@ -2,14 +2,18 @@
 let SCROLL_STEP = 1; // pixels per step
 let SCROLL_INTERVAL = 50; // milliseconds between steps
 let PAUSE_DURATION = 5000; // milliseconds to pause when a post is in view
-const PIXELS_PER_BANANA = 178; // 1 banana ≈ 7 inches ≈ 178 pixels
+const PIXELS_PER_BANANA = 356; // 1 banana ≈ 14 inches ≈ 356 pixels (doubled for more realistic counting)
+
+// Load saved banana counts
+let totalScrollDistance = 0;
+let bananaCount = 0;
+let lifetimeBananas = parseInt(localStorage.getItem('redditScrollerLifetimeBananas') || '0');
+let sessionBananas = 0;
 
 let isScrolling = false;
 let scrollInterval = null;
 let lastScrollPosition = 0;
 let pauseTimeout = null;
-let totalScrollDistance = 0;
-let bananaCount = 0;
 
 // Create control panel
 const controlPanel = document.createElement('div');
@@ -18,50 +22,94 @@ controlPanel.style.cssText = `
     bottom: 20px;
     right: 20px;
     background: #1a1a1b;
-    padding: 15px;
-    border-radius: 8px;
+    padding: 20px;
+    border-radius: 12px;
     z-index: 9999;
     color: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     font-family: Arial, sans-serif;
-    min-width: 200px;
+    min-width: 300px;
 `;
 
 // Create banana counter
 const bananaCounter = document.createElement('div');
 bananaCounter.style.cssText = `
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     text-align: center;
     font-size: 14px;
-    padding: 8px;
+    padding: 15px 10px;
     background: #2d2d2e;
-    border-radius: 4px;
+    border-radius: 8px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
 `;
 
-const bananaEmoji = document.createElement('span');
-bananaEmoji.textContent = '🍌';
-bananaEmoji.style.fontSize = '20px';
+const bananaStatsContainer = document.createElement('div');
+bananaStatsContainer.style.cssText = `
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+`;
 
-const bananaText = document.createElement('span');
-bananaText.textContent = '0 bananas scrolled';
+const createBananaStatElement = (label) => {
+    const container = document.createElement('div');
+    container.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    `;
+    
+    const labelText = document.createElement('span');
+    labelText.textContent = label;
+    labelText.style.cssText = `
+        font-size: 13px;
+        color: #8b8b8b;
+    `;
 
-bananaCounter.appendChild(bananaEmoji);
-bananaCounter.appendChild(bananaText);
+    const emoji = document.createElement('span');
+    emoji.textContent = '🍌';
+    emoji.style.fontSize = '22px';
+    
+    const text = document.createElement('span');
+    text.style.cssText = `
+        font-size: 13px;
+        color: #e5e5e5;
+    `;
+    text.textContent = '0';
+    
+    container.appendChild(labelText);
+    container.appendChild(emoji);
+    container.appendChild(text);
+    return { container, text };
+};
+
+const sessionStats = createBananaStatElement('This Session');
+const lifetimeStats = createBananaStatElement('Lifetime');
+
+bananaStatsContainer.appendChild(sessionStats.container);
+bananaStatsContainer.appendChild(lifetimeStats.container);
+bananaCounter.appendChild(bananaStatsContainer);
+
+// Update initial stats display
+sessionStats.text.textContent = `This Session: ${sessionBananas}`;
+lifetimeStats.text.textContent = `Lifetime: ${lifetimeBananas}`;
 
 // Create settings controls
 const createSettingControl = (label, value, min, max, step) => {
     const container = document.createElement('div');
-    container.style.marginBottom = '10px';
+    container.style.marginBottom = '15px';
     
     const labelElement = document.createElement('label');
     labelElement.textContent = label;
-    labelElement.style.display = 'block';
-    labelElement.style.marginBottom = '5px';
-    labelElement.style.fontSize = '12px';
+    labelElement.style.cssText = `
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #8b8b8b;
+    `;
     
     const input = document.createElement('input');
     input.type = 'range';
@@ -69,16 +117,23 @@ const createSettingControl = (label, value, min, max, step) => {
     input.max = max;
     input.step = step;
     input.value = value;
-    input.style.width = '100%';
+    input.style.cssText = `
+        width: 100%;
+        margin: 0;
+        background: #4a4a4a;
+    `;
     
     const valueDisplay = document.createElement('span');
     valueDisplay.textContent = value;
-    valueDisplay.style.fontSize = '12px';
-    valueDisplay.style.marginLeft = '5px';
+    valueDisplay.style.cssText = `
+        font-size: 13px;
+        color: #e5e5e5;
+        float: right;
+    `;
     
     container.appendChild(labelElement);
-    container.appendChild(input);
     container.appendChild(valueDisplay);
+    container.appendChild(input);
     
     return { container, input, valueDisplay };
 };
@@ -112,12 +167,19 @@ toggleButton.style.cssText = `
     background: #ff4500;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 12px 0;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
     width: 100%;
-    margin-top: 10px;
+    font-size: 14px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    margin-top: 5px;
+    height: 45px;
 `;
 
 controlPanel.appendChild(bananaCounter);
@@ -133,8 +195,17 @@ function updateBananaCounter(scrollAmount) {
     const newBananaCount = Math.floor(totalScrollDistance / PIXELS_PER_BANANA);
     
     if (newBananaCount !== bananaCount) {
+        const bananasEarned = newBananaCount - bananaCount;
         bananaCount = newBananaCount;
-        bananaText.textContent = `${bananaCount} banana${bananaCount !== 1 ? 's' : ''} scrolled`;
+        sessionBananas += bananasEarned;
+        lifetimeBananas += bananasEarned;
+        
+        // Update stats display with just the numbers
+        sessionStats.text.textContent = sessionBananas;
+        lifetimeStats.text.textContent = lifetimeBananas;
+        
+        // Save to localStorage
+        localStorage.setItem('redditScrollerLifetimeBananas', lifetimeBananas.toString());
         
         // Add banana animation when count increases
         const animatedBanana = document.createElement('div');

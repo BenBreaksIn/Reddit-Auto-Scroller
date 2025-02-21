@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Reddit Auto Scroller",
+  "version": "1.0",
+  "description": "Automatically scrolls Reddit pages with customizable speed",
+  "permissions": ["activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.reddit.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+} 

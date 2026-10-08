@@ -1,6 +1,10 @@
 # Reddit Auto Scroller
 
-A Chrome extension that automatically scrolls Reddit pages, pausing briefly when posts are in view to give you time to read them. Now with banana-based scroll tracking!
+A Chrome extension with adjustable scrolling speed, reading pauses, and a banana counter for your scrolling distance.
+
+<img src="docs/controls.jpg" alt="Reddit Auto Scroller controls: session and lifetime banana counters, speed and pause sliders, and a Start Auto-Scroll button" width="364">
+
+*Actual extension controls rendered on a local demonstration page. This screenshot does not establish compatibility with every current Reddit layout.*
 
 ## Features
 

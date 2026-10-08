@@ -4,7 +4,7 @@ A Chrome extension with adjustable scrolling speed, reading pauses, and a banana
 
 <img src="docs/controls.jpg" alt="Reddit Auto Scroller controls: session and lifetime banana counters, speed and pause sliders, and a Start Auto-Scroll button" width="364">
 
-*Actual extension controls rendered on a local demonstration page. This screenshot does not establish compatibility with every current Reddit layout.*
+*Actual extension controls, captured on a local demonstration page.*
 
 ## Features
 

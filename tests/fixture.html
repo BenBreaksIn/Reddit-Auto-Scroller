@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reddit Auto Scroller · local test feed</title>
+<style>
+  body{margin:0;background:#f3f5f7;color:#202a34;font:16px/1.6 system-ui,sans-serif}
+  main{max-width:640px;padding:32px;margin:0 auto}h1{font-size:24px;margin:0 0 8px}p{margin:0 0 12px}
+  .notice{font-size:13px;color:#536170;margin-bottom:24px}shreddit-post,.thing,[data-testid]{display:block;background:white;border:1px solid #cdd5dd;border-radius:14px;padding:24px;margin:20px 0;height:480px;box-sizing:border-box}
+  h2{font-size:20px;margin:0 0 10px}.image{height:300px;background:linear-gradient(135deg,#e9e1cd,#d4e0d6);border-radius:10px;display:grid;place-items:center;font-size:64px}.tall{height:1000px}.tall .image{height:780px}button{padding:8px 12px;font:inherit}textarea{display:block;max-width:100%;margin:12px 0}
+</style>
+<main>
+  <h1>Local test feed</h1>
+  <p class="notice">Synthetic posts for testing the extension. This page loads the same scripts as the extension; Chrome storage is tested separately.</p>
+  <button id="navigate">Simulate a page change</button>
+  <textarea aria-label="Typing test" placeholder="Typing here must not trigger scrolling"></textarea>
+  <div id="feed"></div>
+</main>
+<script>
+  const feed=document.getElementById('feed');
+  const old=new URLSearchParams(location.search).get('layout')==='old';
+  for(let i=0;i<4;i++) {
+    const post=document.createElement(old?'div':'shreddit-post');
+    post.id='fixture-post-'+i;
+    if(old) post.className='thing link';
+    if(i===1) post.classList.add('tall');
+    post.innerHTML=`<h2>${i===1?'A tall post that still gets a reading pause':'A sample post to read'}</h2><p>Post ${i+1} · Local fixture</p><div class="image" aria-label="Illustrative banana">🍌</div>`;
+    feed.append(post);
+  }
+  document.getElementById('navigate').addEventListener('click',()=>{history.pushState({},'',location.pathname+'?page=two');document.querySelector('h1').textContent='Another local feed';});
+</script>
+<script src="../core.js"></script>
+<script src="../content.js"></script>
+</html>

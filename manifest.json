@@ -1,13 +1,27 @@
 {
   "manifest_version": 3,
   "name": "Reddit Auto Scroller",
-  "version": "1.0",
-  "description": "Automatically scrolls Reddit pages with customizable speed",
-  "permissions": ["activeTab"],
+  "version": "1.1.0",
+  "description": "Hands-free Reddit scrolling with reading pauses, saved settings, and a banana counter.",
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["*://*.reddit.com/*"],
-      "js": ["content.js"]
+      "matches": [
+        "https://www.reddit.com/*",
+        "https://old.reddit.com/*",
+        "https://new.reddit.com/*",
+        "https://reddit.com/*"
+      ],
+      "js": [
+        "core.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
-} 
+}

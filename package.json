@@ -1,0 +1,9 @@
+{
+  "name": "reddit-auto-scroller",
+  "version": "1.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "check": "node --check core.js && node --check content.js && node --check background.js"
+  }
+}
